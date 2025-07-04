@@ -86,24 +86,26 @@ export interface SerializedFlashcard {
 }
 
 // Data validation helpers
-export const isValidSerializedDeck = (deck: any): deck is SerializedDeck => {
+export const isValidSerializedDeck = (deck: unknown): deck is SerializedDeck => {
   return (
     typeof deck === 'object' &&
-    typeof deck.id === 'string' &&
-    typeof deck.name === 'string' &&
-    typeof deck.description === 'string' &&
-    typeof deck.created === 'string' &&
-    typeof deck.cardCount === 'number'
+    deck !== null &&
+    typeof (deck as Record<string, unknown>).id === 'string' &&
+    typeof (deck as Record<string, unknown>).name === 'string' &&
+    typeof (deck as Record<string, unknown>).description === 'string' &&
+    typeof (deck as Record<string, unknown>).created === 'string' &&
+    typeof (deck as Record<string, unknown>).cardCount === 'number'
   );
 };
 
-export const isValidSerializedFlashcard = (card: any): card is SerializedFlashcard => {
+export const isValidSerializedFlashcard = (card: unknown): card is SerializedFlashcard => {
   return (
     typeof card === 'object' &&
-    typeof card.id === 'string' &&
-    typeof card.front === 'string' &&
-    typeof card.back === 'string' &&
-    typeof card.created === 'string' &&
-    typeof card.deckId === 'string'
+    card !== null &&
+    typeof (card as Record<string, unknown>).id === 'string' &&
+    typeof (card as Record<string, unknown>).front === 'string' &&
+    typeof (card as Record<string, unknown>).back === 'string' &&
+    typeof (card as Record<string, unknown>).created === 'string' &&
+    typeof (card as Record<string, unknown>).deckId === 'string'
   );
 }; 

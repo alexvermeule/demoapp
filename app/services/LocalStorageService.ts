@@ -22,10 +22,19 @@ export class LocalStorageService implements DataService {
   private readonly CURRENT_VERSION = '1.0.0';
 
   constructor() {
-    this.initializeStorage();
+    // Only initialize if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      this.initializeStorage();
+    }
+  }
+
+  private isClient(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
   }
 
   private initializeStorage(): void {
+    if (!this.isClient()) return;
+    
     // Check if this is the first time or if we need to migrate data
     const version = localStorage.getItem(this.STORAGE_KEYS.VERSION);
     if (!version) {
@@ -37,6 +46,8 @@ export class LocalStorageService implements DataService {
   }
 
   private ensureStorageKeys(): void {
+    if (!this.isClient()) return;
+    
     if (!localStorage.getItem(this.STORAGE_KEYS.DECKS)) {
       localStorage.setItem(this.STORAGE_KEYS.DECKS, JSON.stringify([]));
     }
@@ -102,6 +113,8 @@ export class LocalStorageService implements DataService {
 
   // Deck operations
   async saveDecks(decks: Deck[]): Promise<void> {
+    if (!this.isClient()) return;
+    
     try {
       const serialized = this.serializeDecks(decks);
       localStorage.setItem(this.STORAGE_KEYS.DECKS, serialized);
@@ -112,6 +125,8 @@ export class LocalStorageService implements DataService {
   }
 
   async loadDecks(): Promise<Deck[]> {
+    if (!this.isClient()) return [];
+    
     try {
       const data = localStorage.getItem(this.STORAGE_KEYS.DECKS);
       if (!data) return [];
@@ -124,6 +139,8 @@ export class LocalStorageService implements DataService {
 
   // Flashcard operations
   async saveFlashcards(flashcards: FlashcardData[]): Promise<void> {
+    if (!this.isClient()) return;
+    
     try {
       const serialized = this.serializeFlashcards(flashcards);
       localStorage.setItem(this.STORAGE_KEYS.FLASHCARDS, serialized);
@@ -134,6 +151,8 @@ export class LocalStorageService implements DataService {
   }
 
   async loadFlashcards(): Promise<FlashcardData[]> {
+    if (!this.isClient()) return [];
+    
     try {
       const data = localStorage.getItem(this.STORAGE_KEYS.FLASHCARDS);
       if (!data) return [];
@@ -146,6 +165,8 @@ export class LocalStorageService implements DataService {
 
   // Study session operations
   async saveStudySession(session: StudySession): Promise<void> {
+    if (!this.isClient()) return;
+    
     try {
       const sessions = await this.loadStudySessions();
       sessions.push(session);
@@ -162,6 +183,8 @@ export class LocalStorageService implements DataService {
   }
 
   async loadStudySessions(): Promise<StudySession[]> {
+    if (!this.isClient()) return [];
+    
     try {
       const data = localStorage.getItem(this.STORAGE_KEYS.STUDY_SESSIONS);
       if (!data) return [];
@@ -209,6 +232,8 @@ export class LocalStorageService implements DataService {
   }
 
   async clearAllData(): Promise<void> {
+    if (!this.isClient()) return;
+    
     try {
       localStorage.removeItem(this.STORAGE_KEYS.DECKS);
       localStorage.removeItem(this.STORAGE_KEYS.FLASHCARDS);
@@ -229,6 +254,16 @@ export class LocalStorageService implements DataService {
     sessionCount: number;
     storageUsed: number; // in bytes (approximate)
   } {
+    if (!this.isClient()) {
+      return {
+        version: 'unknown',
+        deckCount: 0,
+        flashcardCount: 0,
+        sessionCount: 0,
+        storageUsed: 0
+      };
+    }
+    
     const version = localStorage.getItem(this.STORAGE_KEYS.VERSION) || 'unknown';
     const decksData = localStorage.getItem(this.STORAGE_KEYS.DECKS) || '[]';
     const flashcardsData = localStorage.getItem(this.STORAGE_KEYS.FLASHCARDS) || '[]';
