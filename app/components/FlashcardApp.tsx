@@ -5,76 +5,60 @@ import Flashcard from './Flashcard';
 import FlashcardForm from './FlashcardForm';
 import DeckSelector from './DeckSelector';
 import Header from './Header';
-
-interface FlashcardData {
-  id: string;
-  front: string;
-  back: string;
-  created: Date;
-  deckId: string;
-}
-
-interface Deck {
-  id: string;
-  name: string;
-  description: string;
-  created: Date;
-  cardCount: number;
-}
+import { useDataService } from '../hooks/useDataService';
+import { FlashcardData } from '../services/DataService';
 
 export default function FlashcardApp() {
-  const [flashcards, setFlashcards] = useState<FlashcardData[]>([]);
-  const [decks, setDecks] = useState<Deck[]>([]);
+  const {
+    decks,
+    flashcards,
+    isLoading,
+    error,
+    createDeck,
+    updateDeck,
+    deleteDeck,
+    createFlashcard,
+    updateFlashcard,
+    deleteFlashcard,
+    getFlashcardsForDeck,
+    clearError,
+  } = useDataService();
+
   const [currentDeckId, setCurrentDeckId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'decks' | 'add' | 'search'>('decks');
   const [showForm, setShowForm] = useState(false);
   const [editingCard, setEditingCard] = useState<FlashcardData | null>(null);
 
   // Get flashcards for current deck
-  const currentDeckFlashcards = flashcards.filter(card => card.deckId === currentDeckId);
-
-  // Update deck card counts
-  const updateDeckCardCounts = (updatedFlashcards: FlashcardData[]) => {
-    setDecks(prevDecks => 
-      prevDecks.map(deck => ({
-        ...deck,
-        cardCount: updatedFlashcards.filter(card => card.deckId === deck.id).length
-      }))
-    );
-  };
+  const currentDeckFlashcards = getFlashcardsForDeck(currentDeckId || '');
 
   // Deck management functions
-  const createDeck = (name: string, description: string) => {
-    const newDeck: Deck = {
-      id: crypto.randomUUID(),
-      name,
-      description,
-      created: new Date(),
-      cardCount: 0,
-    };
-    setDecks([...decks, newDeck]);
-    setCurrentDeckId(newDeck.id);
+  const handleCreateDeck = async (name: string, description: string) => {
+    try {
+      const newDeck = await createDeck(name, description);
+      setCurrentDeckId(newDeck.id);
+    } catch (error) {
+      console.error('Error creating deck:', error);
+    }
   };
 
-  const editDeck = (deckId: string, name: string, description: string) => {
-    setDecks(decks.map(deck => 
-      deck.id === deckId 
-        ? { ...deck, name, description }
-        : deck
-    ));
+  const handleEditDeck = async (deckId: string, name: string, description: string) => {
+    try {
+      await updateDeck(deckId, name, description);
+    } catch (error) {
+      console.error('Error updating deck:', error);
+    }
   };
 
-  const deleteDeck = (deckId: string) => {
-    // Remove all flashcards from this deck
-    const updatedFlashcards = flashcards.filter(card => card.deckId !== deckId);
-    setFlashcards(updatedFlashcards);
-    
-    // Remove the deck
-    setDecks(decks.filter(deck => deck.id !== deckId));
-    
-    // If this was the current deck, clear selection
-    if (currentDeckId === deckId) {
-      setCurrentDeckId(null);
+  const handleDeleteDeck = async (deckId: string) => {
+    try {
+      await deleteDeck(deckId);
+      // If this was the current deck, clear selection
+      if (currentDeckId === deckId) {
+        setCurrentDeckId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting deck:', error);
     }
   };
 
@@ -85,38 +69,34 @@ export default function FlashcardApp() {
   };
 
   // Flashcard management functions
-  const addFlashcard = (front: string, back: string) => {
+  const handleAddFlashcard = async (front: string, back: string) => {
     if (!currentDeckId) return;
     
-    const newCard: FlashcardData = {
-      id: crypto.randomUUID(),
-      front,
-      back,
-      created: new Date(),
-      deckId: currentDeckId,
-    };
-    const updatedFlashcards = [...flashcards, newCard];
-    setFlashcards(updatedFlashcards);
-    updateDeckCardCounts(updatedFlashcards);
-    setShowForm(false);
-  };
-
-  const updateFlashcard = (front: string, back: string) => {
-    if (editingCard) {
-      const updatedFlashcards = flashcards.map(card => 
-        card.id === editingCard.id 
-          ? { ...card, front, back }
-          : card
-      );
-      setFlashcards(updatedFlashcards);
-      setEditingCard(null);
+    try {
+      await createFlashcard(currentDeckId, front, back);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating flashcard:', error);
     }
   };
 
-  const deleteFlashcard = (id: string) => {
-    const updatedFlashcards = flashcards.filter(card => card.id !== id);
-    setFlashcards(updatedFlashcards);
-    updateDeckCardCounts(updatedFlashcards);
+  const handleUpdateFlashcard = async (front: string, back: string) => {
+    if (editingCard) {
+      try {
+        await updateFlashcard(editingCard.id, front, back);
+        setEditingCard(null);
+      } catch (error) {
+        console.error('Error updating flashcard:', error);
+      }
+    }
+  };
+
+  const handleDeleteFlashcard = async (id: string) => {
+    try {
+      await deleteFlashcard(id);
+    } catch (error) {
+      console.error('Error deleting flashcard:', error);
+    }
   };
 
   const startEditing = (id: string) => {
@@ -144,8 +124,47 @@ export default function FlashcardApp() {
 
   const currentDeck = decks.find(deck => deck.id === currentDeckId);
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your flashcards...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mx-4 mt-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={clearError}
+                  className="bg-red-100 px-2 py-1 text-xs font-medium text-red-800 rounded hover:bg-red-200"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <Header currentView={currentView} onViewChange={handleViewChange} />
 
@@ -158,9 +177,9 @@ export default function FlashcardApp() {
               decks={decks}
               currentDeckId={currentDeckId}
               onDeckSelect={selectDeck}
-              onDeckCreate={createDeck}
-              onDeckEdit={editDeck}
-              onDeckDelete={deleteDeck}
+              onDeckCreate={handleCreateDeck}
+              onDeckEdit={handleEditDeck}
+              onDeckDelete={handleDeleteDeck}
             />
 
             {/* Flashcards Section - Only show if a deck is selected */}
@@ -186,7 +205,7 @@ export default function FlashcardApp() {
                         Edit Flashcard
                       </h3>
                       <FlashcardForm
-                        onSubmit={updateFlashcard}
+                        onSubmit={handleUpdateFlashcard}
                         onCancel={cancelEditing}
                         initialFront={editingCard.front}
                         initialBack={editingCard.back}
@@ -206,7 +225,7 @@ export default function FlashcardApp() {
                         front={card.front}
                         back={card.back}
                         onEdit={startEditing}
-                        onDelete={deleteFlashcard}
+                        onDelete={handleDeleteFlashcard}
                       />
                     ))}
                   </div>
@@ -247,7 +266,7 @@ export default function FlashcardApp() {
                   Add Flashcard to {currentDeck.name}
                 </h2>
                 <FlashcardForm
-                  onSubmit={addFlashcard}
+                  onSubmit={handleAddFlashcard}
                   onCancel={() => setCurrentView('decks')}
                 />
               </>
