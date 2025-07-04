@@ -13,6 +13,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database integration with Prisma + SQLite
 - AI-powered flashcard generation
 
+## [0.3.0] - 2024-12-19
+
+### Added
+- **Header Component**: Clean navigation bar inspired by AnkiWeb
+- **Deck Management**: Complete deck functionality with CRUD operations
+- **View System**: Navigation between Decks, Add, and Search views
+- **Collection Stats**: Display total cards and decks count
+- **Actions Dropdown**: Clean deck management with dropdown menu
+- **Table View**: Professional deck listing with sortable columns
+
+### Changed
+- **Complete UI Redesign**: Inspired by AnkiWeb's clean, professional design
+- **Better Visual Hierarchy**: Improved typography and spacing
+- **Color Scheme**: Consistent blues and grays throughout
+- **Information Architecture**: Cleaner organization of features
+- **Navigation**: Tab-based navigation system
+- **Forms**: Simplified with better validation and spacing
+
+### Improved
+- **User Experience**: More intuitive deck and card management
+- **Visual Design**: Reduced clutter, better use of white space
+- **Responsive Design**: Better mobile and tablet experience
+- **Accessibility**: Improved focus states and button styling
+- **Performance**: Cleaner component structure
+
+### Technical
+- **Component Architecture**: Modular Header and DeckSelector components
+- **State Management**: Improved view state handling
+- **TypeScript**: Enhanced type safety for new components
+- **CSS**: AnkiWeb-inspired styling with Tailwind CSS
+
 ## [0.2.0] - 2024-12-19
 
 ### Added
@@ -63,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md with semantic versioning
 - Tech stack documentation with AWS migration path
 
-[Unreleased]: https://github.com/alexvermeule/demoapp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/alexvermeule/demoapp/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/alexvermeule/demoapp/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/alexvermeule/demoapp/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/alexvermeule/demoapp/releases/tag/v0.1.0 
